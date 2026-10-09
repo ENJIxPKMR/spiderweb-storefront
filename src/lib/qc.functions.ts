@@ -25,7 +25,7 @@ export const qcForProduct = createServerFn({ method: "POST" })
     if (!row) return { ok: false as const, title: "", images: [] as string[] };
 
     const stored = ((row as any).qc_images ?? []).filter((u: string) =>
-      /^https?:\/\//i.test(u),
+      /^(https?:\/\/|\/api\/public\/product-image\?)/i.test(u),
     ) as string[];
     if (stored.length) {
       return { ok: true as const, title: (row as any).title as string, images: stored.slice(0, 10) };
@@ -35,7 +35,9 @@ export const qcForProduct = createServerFn({ method: "POST" })
     if (!src) return { ok: true as const, title: (row as any).title as string, images: [] };
 
     const details = await fetchUsfansDetails(src).catch(() => null);
-    const images = (details?.qcImages ?? []).slice(0, 10);
+    const { archiveProductImages } = await import("@/lib/image-storage.server");
+    const saved = await archiveProductImages({ qc_images: (details?.qcImages ?? []).slice(0, 10) });
+    const images = saved.qc_images;
     if (images.length) {
       await supabaseAdmin.from("products").update({ qc_images: images }).eq("id", data.productId);
     }

@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+import { getPanelSession } from "@/lib/secure.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { panelDb } from "@/lib/panelDb";
@@ -47,19 +49,20 @@ function SellerPage() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    const saved = safeStorage.get("pkmr_seller");
-    if (saved && getPanelToken()) setSellerId(saved);
+    void getPanelSession({ data: { token: getPanelToken() } }).then(session => setSellerId(session?.role === "seller" ? session.sellerId ?? null : null)).catch(() => setSellerId(null));
   }, []);
 
   const seller = (sellers ?? []).find((s) => s.id === sellerId) ?? null;
 
   const login = async () => {
     setErr("");
+    const { data: auth, error } = await supabase.auth.signInWithPassword({ email: user.trim(), password: pass });
+    if (error || !auth.session) { setErr(error?.message ?? "Potwierdź adres e-mail."); return; }
     const res = await sellerLogin({
-      data: { username: user.trim(), passwordHash: await sha256Hex(pass) },
+      data: { token: auth.session.access_token },
     }).catch(() => ({ ok: false as const }));
     if (!res.ok || !("sellerId" in res)) {
-      return;
+      setErr("To konto nie ma uprawnień sprzedawcy."); return;
     }
     if ("token" in res) setPanelToken(res.token);
     safeStorage.set("pkmr_seller", res.sellerId);
@@ -80,7 +83,7 @@ function SellerPage() {
           <h1 className="text-xl font-black">Panel sprzedawcy</h1>
           <input
             className={input}
-            placeholder="Login"
+            placeholder="E-mail"
             autoCapitalize="none"
             autoCorrect="off"
             value={user}

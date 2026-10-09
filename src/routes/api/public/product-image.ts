@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/public/product-image")({
     handlers: {
       GET: async ({ request }) => {
         const path = new URL(request.url).searchParams.get("path") ?? "";
-        if (!SAFE_PATH.test(path) || path.includes("..")) {
+        if (!SAFE_PATH.test(path) || path.includes("..") || !/^(archive|catalog)\//.test(path)) {
           return new Response("Invalid image path", { status: 400 });
         }
 

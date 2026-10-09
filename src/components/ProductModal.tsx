@@ -31,7 +31,7 @@ export function ProductModal({
   const [size, setSize] = useState(product.sizes?.[0] ?? "");
   const fetchQc = useServerFn(finderQcByProduct);
   // Zdjęcia QC zapisane przy produkcie pokazują się od razu, bez klikania.
-  const storedQc = (product.qc_images ?? []).filter((u) => /^https?:\/\//i.test(u));
+  const storedQc = (product.qc_images ?? []).filter((u) => /^(https?:\/\/|\/api\/public\/product-image\?)/i.test(u));
   const loadQcPage = useCallback(
     (page: number) => fetchQc({ data: { productId: product.id, page, pageSize: 3 } }),
     [fetchQc, product.id],

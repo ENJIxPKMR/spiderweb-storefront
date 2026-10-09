@@ -18,7 +18,7 @@ export const finderQcByLink = createServerFn({ method: "POST" })
     if (data.page === 1) {
       const { fetchUsfansDetails } = await import("@/lib/agentApi");
       const details = await fetchUsfansDetails(data.url).catch(() => null);
-      const images = (details?.qcImages ?? []).filter((u) => /^https?:\/\//i.test(u));
+      const images = (details?.qcImages ?? []).filter((u) => /^(https?:\/\/|\/api\/public\/product-image\?)/i.test(u));
       if (images.length) {
         return {
           ok: true as const,
@@ -75,7 +75,7 @@ export const finderQcByProduct = createServerFn({ method: "POST" })
     // Strona 1: najpierw zapisane zdjęcia (natychmiast), potem szybki magazyn USFans.
     if (data.page === 1) {
       const cached = (((row as any).qc_images ?? []) as string[]).filter((u) =>
-        /^https?:\/\//i.test(u),
+        /^(https?:\/\/|\/api\/public\/product-image\?)/i.test(u),
       );
       if (cached.length) {
         return {
@@ -98,7 +98,9 @@ export const finderQcByProduct = createServerFn({ method: "POST" })
     if (src) {
       const { fetchUsfansDetails } = await import("@/lib/agentApi");
       const details = await fetchUsfansDetails(src).catch(() => null);
-      const usfans = (details?.qcImages ?? []).filter((u) => /^https?:\/\//i.test(u));
+      const { archiveProductImages } = await import("@/lib/image-storage.server");
+      const saved = await archiveProductImages({ qc_images: details?.qcImages ?? [] });
+      const usfans = saved.qc_images.filter((u) => /^(https?:\/\/|\/api\/public\/product-image\?)/i.test(u));
       if (usfans.length) {
         await supabaseAdmin
           .from("products")
@@ -118,7 +120,7 @@ export const finderQcByProduct = createServerFn({ method: "POST" })
     // Zapas 2: zdjęcia QC zapisane wcześniej w bazie.
 
     const stored = (((row as any).qc_images ?? []) as string[]).filter((u) =>
-      /^https?:\/\//i.test(u),
+      /^(https?:\/\/|\/api\/public\/product-image\?)/i.test(u),
     );
     return {
       ok: stored.length > 0,

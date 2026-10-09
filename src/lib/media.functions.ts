@@ -35,7 +35,7 @@ export const syncProductMedia = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { verifyToken } = await import("@/lib/session.server");
-    const session = verifyToken(data.token);
+    const session = await verifyToken(data.token);
     if (!session || session.role !== "admin") throw new Error("Unauthorized");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -59,7 +59,7 @@ export const syncProductMedia = createServerFn({ method: "POST" })
       const chunk = items.slice(i, i + 5);
       await Promise.all(
         chunk.map(async (p: any) => {
-          const external = (u: string) => /^https?:\/\//i.test(u);
+          const external = (u: string) => /^(https?:\/\/|\/api\/public\/product-image\?)/i.test(u);
           const mainOk = Boolean(p.image_url && external(p.image_url));
           const currentImages = (p.images ?? []).filter(external);
           const currentQc = (p.qc_images ?? []).filter(external);

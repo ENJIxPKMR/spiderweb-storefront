@@ -15,105 +15,28 @@ const ADMIN_TABLES = [
 
 type AdminTable = (typeof ADMIN_TABLES)[number];
 
-const DEFAULT_ADMIN_USER = "admin";
+function cleanToken(value: unknown) { return String(value ?? "").slice(0, 4000); }
 
-function cleanToken(value: unknown) {
-  return String(value ?? "").slice(0, 4000);
-}
-
-/** Verify admin credentials server-side and hand back a signed session token. */
-export const adminLogin = createServerFn({ method: "POST" })
-  .inputValidator((data: { username: string; passwordHash: string }) => {
-    const username = String(data?.username ?? "").trim().slice(0, 100);
-    const passwordHash = String(data?.passwordHash ?? "").trim();
-    if (!username || !/^[a-f0-9]{64}$/.test(passwordHash)) throw new Error("Invalid credentials");
-    return { username, passwordHash };
-  })
+export const getPanelSession = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: cleanToken(data?.token) }))
   .handler(async ({ data }) => {
-    const { issueToken } = await import("@/lib/session.server");
-    const { LOCAL_ADMIN } = await import("@/data/local-accounts.server");
-
-    // 1) Konto lokalne — działa zawsze, także bez połączenia z bazą.
-    if (
-      data.username.toLowerCase() === LOCAL_ADMIN.username.toLowerCase() &&
-      data.passwordHash === LOCAL_ADMIN.passwordHash
-    ) {
-      return { ok: true as const, token: issueToken({ role: "admin" }) };
-    }
-
-    // 2) Konto zapisane w bazie (gdy jest dostępna).
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: rows } = await supabaseAdmin
-        .from("settings")
-        .select("key, value")
-        .in("key", ["admin_username", "admin_password_hash"]);
-      const map = Object.fromEntries((rows ?? []).map((r) => [r.key, r.value]));
-      const expectedUser = map["admin_username"] || DEFAULT_ADMIN_USER;
-      const expectedHash = map["admin_password_hash"] || "";
-      if (
-        expectedHash &&
-        data.username.toLowerCase() === expectedUser.toLowerCase() &&
-        data.passwordHash === expectedHash
-      ) {
-        return { ok: true as const, token: issueToken({ role: "admin" }) };
-      }
-    } catch {
-      /* baza niedostępna — zostaje konto lokalne */
-    }
-    return { ok: false as const };
+    const { verifyToken } = await import("@/lib/session.server");
+    return await verifyToken(data.token);
   });
 
-/** Verify seller credentials server-side; password hashes never reach the browser. */
-export const sellerLogin = createServerFn({ method: "POST" })
-  .inputValidator((data: { username: string; passwordHash: string }) => {
-    const username = String(data?.username ?? "").trim().slice(0, 100);
-    const passwordHash = String(data?.passwordHash ?? "").trim();
-    if (!username || !/^[a-f0-9]{64}$/.test(passwordHash)) throw new Error("Invalid credentials");
-    return { username, passwordHash };
-  })
+export const adminLogin = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: cleanToken(data?.token) }))
   .handler(async ({ data }) => {
-    const { issueToken } = await import("@/lib/session.server");
-    const { LOCAL_SELLERS } = await import("@/data/local-accounts.server");
-    const removed = await deletedLocalSellers();
-
-    // 1) Konta lokalne (plik w kodzie) — działają bez bazy.
-    const local = LOCAL_SELLERS.find(
-      (s) =>
-        s.active &&
-        !removed.includes(s.id) &&
-        s.username.toLowerCase() === data.username.toLowerCase(),
-    );
-    if (local && local.passwordHash === data.passwordHash) {
-      return {
-        ok: true as const,
-        sellerId: local.id,
-        token: issueToken({ role: "seller", sellerId: local.id }),
-      };
-    }
-
-    // 2) Konta z bazy (gdy dostępna).
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: rows, error } = await supabaseAdmin
-        .from("sellers")
-        .select("id, username, password_hash, active")
-        .eq("active", true);
-      if (error) return { ok: false as const };
-      const found = (rows ?? []).find(
-        (s) => s.username.toLowerCase() === data.username.toLowerCase(),
-      );
-      if (found && found.password_hash === data.passwordHash) {
-        return {
-          ok: true as const,
-          sellerId: found.id,
-          token: issueToken({ role: "seller", sellerId: found.id }),
-        };
-      }
-    } catch {
-      /* baza niedostępna — zostają konta lokalne */
-    }
-    return { ok: false as const };
+    const { verifyToken } = await import("@/lib/session.server");
+    const session = await verifyToken(data.token);
+    return session?.role === "admin" ? { ok: true as const, token: data.token } : { ok: false as const };
+  });
+export const sellerLogin = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: cleanToken(data?.token) }))
+  .handler(async ({ data }) => {
+    const { verifyToken } = await import("@/lib/session.server");
+    const session = await verifyToken(data.token);
+    return session?.role === "seller" && session.sellerId ? { ok: true as const, token: data.token, sellerId: session.sellerId } : { ok: false as const };
   });
 
 /**
@@ -147,7 +70,7 @@ export const secureMutate = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { verifyToken } = await import("@/lib/session.server");
-    const session = verifyToken(data.token);
+    const session = await verifyToken(data.token);
     if (!session) return { error: "Unauthorized" };
 
     if (session.role === "seller") {
@@ -213,7 +136,7 @@ export const adminSellerUsernames = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: cleanToken(data?.token) }))
   .handler(async ({ data }) => {
     const { verifyToken } = await import("@/lib/session.server");
-    const session = verifyToken(data.token);
+    const session = await verifyToken(data.token);
     if (!session || session.role !== "admin") return { usernames: {} as Record<string, string> };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin.from("sellers").select("id, username");
@@ -227,7 +150,7 @@ export const adminExportProducts = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: cleanToken(data?.token) }))
   .handler(async ({ data }) => {
     const { verifyToken } = await import("@/lib/session.server");
-    const session = verifyToken(data.token);
+    const session = await verifyToken(data.token);
     if (!session || session.role !== "admin") throw new Error("Unauthorized");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const all: Tables<"products">[] = [];
@@ -279,20 +202,17 @@ export const uploadImage = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { verifyToken } = await import("@/lib/session.server");
-    if (!verifyToken(data.token)) throw new Error("Unauthorized");
+    if (!(await verifyToken(data.token))) throw new Error("Unauthorized");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const bytes = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
-    const path = `${data.folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${data.ext}`;
+    const path = `catalog/${data.folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${data.ext}`;
     const { error } = await supabaseAdmin.storage.from("product-images").upload(path, bytes, {
       cacheControl: "31536000",
       contentType: data.contentType,
       upsert: false,
     });
     if (error) throw new Error("Upload failed");
-    // Public bucket URLs work in preview and after publishing (including Vercel).
-    const { data: publicFile } = supabaseAdmin.storage.from("product-images").getPublicUrl(path);
-    if (!publicFile.publicUrl) throw new Error("Upload URL failed");
-    return { url: publicFile.publicUrl };
+    return { url: `/api/public/product-image?path=${encodeURIComponent(path)}` };
   });
 
 /** Public shipping rates incl. coupon fields, served server-side so they are not exposed via the public data API. */
@@ -335,7 +255,7 @@ export const adminDeleteSeller = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { verifyToken } = await import("@/lib/session.server");
-    const session = verifyToken(data.token);
+    const session = await verifyToken(data.token);
     if (!session || session.role !== "admin") return { error: "Unauthorized" };
     if (!data.id) return { error: "Missing id" };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -343,14 +263,6 @@ export const adminDeleteSeller = createServerFn({ method: "POST" })
     if (pErr) return { error: "Operation failed" };
     const { error: sErr } = await supabaseAdmin.from("sellers").delete().eq("id", data.id);
     if (sErr) return { error: "Operation failed" };
-    const { LOCAL_SELLERS } = await import("@/data/local-accounts.server");
-    if (LOCAL_SELLERS.some((s) => s.id === data.id)) {
-      const list = Array.from(new Set([...(await deletedLocalSellers()), data.id]));
-      const { error } = await supabaseAdmin
-        .from("settings")
-        .upsert({ key: "deleted_local_sellers", value: JSON.stringify(list) }, { onConflict: "key" });
-      if (error) return { error: "Operation failed" };
-    }
     return { error: null };
   });
 
@@ -363,20 +275,9 @@ export const adminDeleteAllProducts = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const { verifyToken } = await import("@/lib/session.server");
-    const session = verifyToken(data.token);
+    const session = await verifyToken(data.token);
     if (!session || session.role !== "admin") return { error: "Unauthorized", deleted: 0 };
-    const { LOCAL_ADMIN } = await import("@/data/local-accounts.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let ok = data.passwordHash === LOCAL_ADMIN.passwordHash;
-    if (!ok) {
-      const { data: row } = await supabaseAdmin
-        .from("settings")
-        .select("value")
-        .eq("key", "admin_password_hash")
-        .maybeSingle();
-      ok = !!row?.value && row.value === data.passwordHash;
-    }
-    if (!ok) return { error: "Wrong password", deleted: 0 };
     let q = supabaseAdmin.from("products").delete({ count: "exact" });
     q = data.sellerId ? q.eq("seller_id", data.sellerId) : q.not("id", "is", null);
     const { error, count } = await q;

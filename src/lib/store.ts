@@ -239,6 +239,7 @@ export const useCategories = () =>
 export const useProducts = () =>
   useQuery({
     queryKey: ["products"],
+    staleTime: 300_000,
     queryFn: async () => {
       // Pobieramy stronami po 1000 (limit serwera) — maks. 4000 produktów.
       const data: Tables<"products">[] = [];
@@ -254,8 +255,8 @@ export const useProducts = () =>
         data.push(...((page ?? []) as Tables<"products">[]));
         if (!page || page.length < 1000) break;
       }
-      return (data ?? []).map((p) => {
-        const main = p.image_url ?? null;
+      return (data ?? []).sort((a,b) => Number(Boolean(b.image_url || b.images?.length || b.qc_images?.length)) - Number(Boolean(a.image_url || a.images?.length || a.qc_images?.length))).map((p) => {
+        const main = p.image_url || p.images?.find(Boolean) || p.qc_images?.find(Boolean) || null;
         // Galeria bywa zduplikowana (to samo zdjęcie kilka razy / kopia głównego).
         const extra = Array.from(new Set(((p.images ?? []) as string[]).filter(Boolean))).filter(
           (u) => u !== main,
@@ -512,7 +513,7 @@ export function shippingCostWithCoupon(rate: ShippingRate, kg: number): number |
 export const WEIGHT_STEPS = Array.from({ length: 50 }, (_, i) => (i + 1) * 0.5);
 
 /** Seed losowania — nowy przy każdym odświeżeniu strony, stały w trakcie przeglądania. */
-const SHUFFLE_SEED = Math.floor(Math.random() * 1e9);
+const SHUFFLE_SEED = 7331;
 function shuffleSeed(): number {
   return SHUFFLE_SEED;
 }
@@ -529,6 +530,9 @@ function hashOrder(id: string, seed: number): number {
 /** Miesza listę produktów w sposób stabilny w obrębie sesji. */
 export function shuffleProducts<T extends { id: string }>(items: T[]): T[] {
   const seed = shuffleSeed();
-  return [...items].sort((a, b) => hashOrder(a.id, seed) - hashOrder(b.id, seed));
+  return [...items].sort((a, b) => {
+    const image = (p: T) => { const r = p as T & { image_url?: string | null; images?: string[]; qc_images?: string[] }; return Boolean(r.image_url || r.images?.some(Boolean) || r.qc_images?.some(Boolean)); };
+    return Number(image(b)) - Number(image(a)) || hashOrder(a.id, seed) - hashOrder(b.id, seed);
+  });
 }
 

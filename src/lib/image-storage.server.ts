@@ -12,9 +12,9 @@ export async function archiveImage(source: string): Promise<string> {
     const hash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
     const path = `archive/${hash}.img`;
     const bucket = supabaseAdmin.storage.from("product-images");
-    const publicUrl = bucket.getPublicUrl(path).data.publicUrl;
-    const existing = await fetch(publicUrl, { method: "HEAD" });
-    if (existing.ok) return publicUrl;
+    const publicUrl = `/api/public/product-image?path=${encodeURIComponent(path)}`;
+    const existing = await bucket.list("archive", { search: `${hash}.img`, limit: 1 });
+    if (existing.data?.some(file => file.name === `${hash}.img`)) return publicUrl;
     const response = await fetch(url, { redirect: "error", headers: { Referer: "https://weidian.com/" } });
     const type = response.headers.get("content-type")?.split(";")[0] ?? "";
     if (!response.ok || !/^image\/(jpeg|png|webp|gif|avif)$/.test(type)) return source;

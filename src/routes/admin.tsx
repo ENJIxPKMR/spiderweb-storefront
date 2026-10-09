@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+import { getPanelSession } from "@/lib/secure.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TOP_AGENT_KEYS } from "@/lib/agentRank";
 import { useEffect, useState, useMemo } from "react";
@@ -43,8 +45,7 @@ import {
   type Product,
 } from "@/lib/store";
 
-const DEFAULT_ADMIN_USER = "replikaenjoyeradmin";
-const DEFAULT_ADMIN_HASH = "a90f1de0e4b918c302344237e041c27e7c06dc37f48115be40f528ad5fa90880";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -89,16 +90,18 @@ function AdminPage() {
   const { data: settings } = useSettings();
 
   useEffect(() => {
-    if (safeStorage.get("pkmr_admin") === "1" && getPanelToken()) setAuthed(true);
+    void getPanelSession({ data: { token: getPanelToken() } }).then(session => setAuthed(session?.role === "admin")).catch(() => setAuthed(false));
   }, []);
 
   const login = async () => {
     setErr("");
+    const { data: auth, error } = await supabase.auth.signInWithPassword({ email: user.trim(), password: pass });
+    if (error || !auth.session) { setErr(error?.message ?? "Potwierdź adres e-mail."); return; }
     const res = await adminLogin({
-      data: { username: user.trim(), passwordHash: await sha256Hex(pass) },
+      data: { token: auth.session.access_token },
     }).catch(() => ({ ok: false as const }));
     if (!res.ok || !("token" in res)) {
-      return;
+      setErr("To konto nie ma uprawnień do panelu."); return;
     }
     setPanelToken(res.token);
     safeStorage.set("pkmr_admin", "1");
@@ -129,10 +132,10 @@ function AdminPage() {
             </span>
             <input
               className={input}
-              placeholder="Login"
+              placeholder="E-mail"
               autoCapitalize="none"
               autoCorrect="off"
-              autoComplete="username"
+              autoComplete="email"
               value={user}
               onChange={(e) => setUser(e.target.value)}
             />
