@@ -27,7 +27,7 @@ export function CosmicWeb() {
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const spacing = w < 700 ? 135 : 170;
+      const spacing = w < 700 ? 90 : 110;
       points = [];
       for (let y = -spacing; y < h + spacing; y += spacing) {
         for (let x = -spacing; x < w + spacing; x += spacing) {
@@ -42,13 +42,14 @@ export function CosmicWeb() {
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
         if (!p) continue;
-        for (let j = i + 1; j < points.length; j++) {
+        for (let j = i + 1; j < Math.min(points.length,i + Math.ceil(w/90)*3); j++) {
           const q = points[j];
           if (!q) continue;
           const dist = Math.hypot(p.x - q.x, p.y - q.y);
-          if (dist > 185) continue;
+          if (dist > 145) continue;
           const proximity = Math.max(0, 1 - Math.min(Math.hypot((p.x + q.x) / 2 - focus.x, (p.y + q.y) / 2 - focus.y) / 300, 1));
-          ctx.strokeStyle = `rgba(195, 212, 223, ${0.11 + proximity * 0.38})`;
+          ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue("--web-line").trim();
+          ctx.globalAlpha = 0.09 + proximity * 0.3;
           ctx.lineWidth = proximity > 0.2 ? 1.2 : 0.8;
           ctx.beginPath();
           ctx.moveTo(p.x + (focus.x - p.x) * proximity * 0.045, p.y + (focus.y - p.y) * proximity * 0.045);
@@ -60,7 +61,8 @@ export function CosmicWeb() {
         const nearby = points.filter((p) => Math.hypot(p.x - focus.x, p.y - focus.y) < 190).sort((a, b) => Math.atan2(a.y - focus.y, a.x - focus.x) - Math.atan2(b.y - focus.y, b.x - focus.x));
         nearby.forEach((p, i) => {
           const next = nearby[(i + 1) % nearby.length];
-          ctx.strokeStyle = "rgba(230, 241, 246, 0.55)";
+          ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue("--web-focus").trim();
+          ctx.globalAlpha = 0.45;
           ctx.lineWidth = 1.15;
           ctx.beginPath();
           ctx.moveTo(focus.x, focus.y);

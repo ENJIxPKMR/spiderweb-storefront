@@ -21,7 +21,7 @@ function ProductCardBase({
   const inCart = has(product.id);
 
   return (
-    <article className="cv-card group flex flex-col overflow-hidden rounded-2xl border border-border bg-surface transition-all hover:-translate-y-1 hover:border-primary/60 hover:glow-ring">
+    <article className="cv-card group flex flex-col overflow-hidden product-tile rounded-lg border border-border bg-surface transition-all hover:-translate-y-1 hover:border-primary/60 hover:glow-ring">
       <div className="relative aspect-square overflow-hidden bg-secondary">
         {product.image_url ? (
           <StableImage
