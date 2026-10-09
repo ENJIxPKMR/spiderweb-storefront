@@ -1,24 +1,247 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { ProductCard } from "@/components/ProductCard";
+import { ProductModal } from "@/components/ProductModal";
+import {
+  useAgents,
+  useCategories,
+  useProducts,
+  shuffleProducts,
+  type Product,
+} from "@/lib/store";
+import { useLang } from "@/lib/i18n";
+import { HaulCalculator } from "@/components/HaulCalculator";
+import { Button } from "@/components/ui/button";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+/** Ile kafelków renderujemy w jednej porcji — reszta doładowuje się na żądanie. */
+const PAGE_SIZE = 24;
+
+/** „Best batch” / „Best” — jakość lub batch produktu zawiera słowo „best”. */
+function isBest(p: Product) {
+  return `${p.quality ?? ""} ${p.batch ?? ""}`.toLowerCase().includes("best");
+}
+
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Product Finder — PKMREPS Agent & QC Finds" },
+      {
+        name: "description",
+        content:
+          "Znajdź najlepsze findsy, sprawdź zdjęcia QC i kup przez Litbuy, Kakaobuy lub USFans.",
+      },
+      { property: "og:title", content: "Product Finder — PKMREPS" },
+      {
+        property: "og:description",
+        content: "Wyszukiwarka findsów z QC i bezpośrednimi linkami do agentów.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const { data: products } = useProducts();
+  const { data: agents } = useAgents();
+  const { data: categories } = useCategories();
+  const { t } = useLang();
+  const [q, setQ] = useState("");
+  const [cat, setCat] = useState("");
+  const [min, setMin] = useState("");
+  const [max, setMax] = useState("");
+  const [bestOnly, setBestOnly] = useState(false);
+  const [girlOnly, setGirlOnly] = useState(false);
+  const [detail, setDetail] = useState<Product | null>(null);
+
+  // Product Finder shows only global (admin) products — seller items live in their stores.
+  // Kolejność jest losowa (stała w obrębie sesji), więc nowe produkty trafiają w losowe miejsce.
+  const all = useMemo(
+    () => shuffleProducts((products ?? []).filter((p) => !p.seller_id || p.show_on_home)).sort((a, b) => Number(Boolean(b.image_url || b.images?.length)) - Number(Boolean(a.image_url || a.images?.length))),
+    [products],
+  );
+
+  const filtered = useMemo(() => {
+    const lo = min === "" ? -Infinity : Number(min);
+    const hi = max === "" ? Infinity : Number(max);
+    const needle = q.trim().toLowerCase();
+    return all.filter(
+      (p) =>
+        (needle === "" ||
+          `${p.title} ${p.batch ?? ""} ${p.quality ?? ""} ${p.category ?? ""}`
+            .toLowerCase()
+            .includes(needle)) &&
+        (cat === "" || p.category === cat) &&
+        (!bestOnly || isBest(p)) &&
+        (!girlOnly || p.for_women) &&
+        Number(p.price) >= lo &&
+        Number(p.price) <= hi,
+    );
+  }, [all, q, cat, min, max, bestOnly, girlOnly]);
+
+  const [limit, setLimit] = useState(PAGE_SIZE);
+
+  // Każda zmiana filtrów zaczyna listę od pierwszej porcji.
+  useEffect(() => {
+    setLimit(PAGE_SIZE);
+  }, [q, cat, min, max, bestOnly, girlOnly]);
+
+  const visible = useMemo(() => filtered.slice(0, limit), [filtered, limit]);
+  const remaining = filtered.length - visible.length;
+
+  const inputCls =
+    "w-full rounded-xl border border-border bg-secondary px-4 py-3 text-sm outline-none focus:border-primary focus:glow-ring";
+
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <section className="relative mb-8 overflow-hidden border-b border-border/60 px-4 py-10 text-center sm:py-16">
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
+          {t("home.kicker")}
+        </p>
+        <h1 className="mt-3 text-3xl font-black sm:text-5xl">
+          {t("home.title1")} <span className="text-gradient-brand">{t("home.title2")}</span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">{t("home.subtitle")}</p>
+        <div className="mx-auto mt-6 flex max-w-xl gap-2">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t("finder.search")}
+            className={inputCls}
+          />
+        </div>
+      </section>
+
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-y border-border py-4">
+        <p className="text-sm font-semibold"><span className="text-brand-cyan">−40%</span> {t("cart.shippingTitle")} · {t("cart.code", "kod")} <strong>PKMR</strong></p>
+        <Button asChild size="sm"><Link to="/agenci">{t("promo.claim", "Odbierz")} →</Link></Button>
+      </div>
+
+
+
+      <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-end">
+        <label className="flex-1 text-xs font-semibold text-muted-foreground">
+          {t("finder.priceFrom")}
+          <input
+            type="text"
+            inputMode="decimal"
+            value={min}
+            onChange={(e) => setMin(e.target.value)}
+            placeholder="min"
+            className={`${inputCls} mt-1`}
+          />
+        </label>
+        <label className="flex-1 text-xs font-semibold text-muted-foreground">
+          {t("finder.priceTo")}
+          <input
+            type="text"
+            inputMode="decimal"
+            value={max}
+            onChange={(e) => setMax(e.target.value)}
+            placeholder="max"
+            className={`${inputCls} mt-1`}
+          />
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={bestOnly}
+            onClick={() => setBestOnly(!bestOnly)}
+            className={`group flex items-center gap-2 rounded-xl border px-4 py-3 text-xs font-extrabold uppercase tracking-wide transition-all active:scale-95 ${bestOnly ? "gradient-brand border-transparent text-surface-deep glow-ring" : "border-border text-muted-foreground hover:border-primary hover:text-primary"}`}
+          >
+            <span className="text-sm leading-none">🔥</span>
+            {t("finder.bestOnly", "Best batch only")}
+          </button>
+          <button
+            type="button"
+            aria-pressed={girlOnly}
+            onClick={() => setGirlOnly(!girlOnly)}
+            className={`group flex items-center gap-2 rounded-xl border px-4 py-3 text-xs font-extrabold uppercase tracking-wide transition-all active:scale-95 ${girlOnly ? "gradient-brand border-transparent text-surface-deep glow-ring" : "border-border text-muted-foreground hover:border-primary hover:text-primary"}`}
+          >
+            <span className="text-sm leading-none">👛</span>
+            {t("finder.girlZone", "Girl Zone")}
+          </button>
+
+          <button
+            onClick={() => {
+              setQ("");
+              setCat("");
+              setMin("");
+              setMax("");
+              setBestOnly(false);
+              setGirlOnly(false);
+            }}
+            className="rounded-xl border border-border px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            {t("finder.clear")}
+          </button>
+        </div>
+      </div>
+
+      <h2 className="mb-4 text-lg font-bold">
+        {t("finder.all")}
+      </h2>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+        <button
+          onClick={() => setCat("")}
+          className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${cat === "" ? "border-primary text-primary glow-ring" : "border-border text-muted-foreground"}`}
+        >
+          {t("finder.allCats")}
+        </button>
+        {(categories ?? []).map((c) => (
+          <button
+            key={c.id}
+            onClick={() => setCat(c.name)}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${cat === c.name ? "border-primary text-primary glow-ring" : "border-border text-muted-foreground"}`}
+          >
+            {t(`cat.${c.name}`, c.name)}
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="rounded-2xl border border-border bg-surface p-10 text-center text-sm text-muted-foreground">
+          {t("finder.empty")}
+        </p>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {visible.map((p) => (
+              <ProductCard key={p.id} product={p} onDetails={setDetail} />
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-col items-center gap-2">
+            {remaining > 0 ? (
+              <button
+                onClick={() => setLimit((l) => l + PAGE_SIZE)}
+                className="rounded-xl gradient-brand px-8 py-3 text-xs font-extrabold uppercase tracking-wide text-surface-deep transition-transform hover:-translate-y-0.5 hover:glow-ring-strong"
+              >
+                {t("finder.loadMore")}
+              </button>
+            ) : null}
+          </div>
+        </>
+      )}
+
+
+      <section className="mt-12 border-t border-border pt-8"><HaulCalculator /></section>
+      <section className="mt-8 grid gap-4 sm:grid-cols-3">
+        {[
+          { label: t("guide.trackTitle"), icon: "📦", hash: "tracking" },
+          { label: "QC Finder", icon: "🔎", hash: "qc-finder" },
+          { label: t("guide.convTitle"), icon: "🔗", hash: "converter" },
+        ].map((tool) => <Button key={tool.hash} asChild variant="outline" className="h-16 justify-between px-5"><Link to="/poradnik" hash={tool.hash}><span>{tool.icon} {tool.label}</span><span>→</span></Link></Button>)}
+      </section>
+
+      {detail ? (
+        <ProductModal product={detail} agents={agents ?? []} onClose={() => setDetail(null)} />
+      ) : null}
     </div>
   );
 }
