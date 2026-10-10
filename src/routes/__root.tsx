@@ -148,11 +148,12 @@ function RootComponent() {
         <CurrencyProvider>
         <CartProvider>
         <div className="relative isolate min-h-screen">
-          {!isPanel && <CosmicWeb />}
+          {!isPanel && <CosmicWeb dense={pathname === "/"} />}
           {!isPanel && <Header />}
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           {!isPanel && <FloatingIsland />}
+          {!isPanel && pathname !== "/" && <PromoModal />}
 
           <ScrollToTop />
           <Toaster richColors position="top-center" />

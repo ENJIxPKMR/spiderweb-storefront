@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 /** Decorative canvas stays behind content and never intercepts navigation. */
-export function CosmicWeb() {
+export function CosmicWeb({ dense = false }: { dense?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function CosmicWeb() {
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const spacing = w < 700 ? 90 : 110;
+      const spacing = dense ? (w < 700 ? 90 : 110) : (w < 700 ? 135 : 170);
       points = [];
       for (let y = -spacing; y < h + spacing; y += spacing) {
         for (let x = -spacing; x < w + spacing; x += spacing) {
@@ -49,7 +49,7 @@ export function CosmicWeb() {
           const q = points[j];
           if (!q) continue;
           const dist = Math.hypot(p.x - q.x, p.y - q.y);
-          if (dist > 145) continue;
+          if (dist > (dense ? 145 : 185)) continue;
           const proximity = Math.max(0, 1 - Math.min(Math.hypot((p.x + q.x) / 2 - focus.x, (p.y + q.y) / 2 - focus.y) / 300, 1));
           ctx.strokeStyle = lineColor;
           ctx.globalAlpha = 0.09 + proximity * 0.3;
@@ -105,7 +105,7 @@ export function CosmicWeb() {
       reduced.removeEventListener("change", motion);
       fine.removeEventListener("change", motion);
     };
-  }, []);
+  }, [dense]);
 
   return <canvas ref={ref} aria-hidden="true" className="pointer-events-none fixed inset-0 z-0" />;
 }

@@ -17,3 +17,5 @@
 - Strip caller-provided product IDs from seller inserts and disallow seller upserts to prevent overwriting another store.
 
 - Homepage promotional photos, copy and destinations read admin-managed settings; defaults apply only when a field is empty.
+
+- Scope homepage layout styling to the homepage; preserve the original shared palette and other public surfaces to avoid cross-page redesigns.
