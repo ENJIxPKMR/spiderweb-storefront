@@ -1,4 +1,3 @@
-import { BackgroundRemover } from "@/components/BackgroundRemover";
 import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import { uploadImages } from "@/lib/store";
@@ -57,7 +56,6 @@ export function ImageUploader({
       >
         {busy ? "Przesyłanie..." : label}
       </Button>
-      <BackgroundRemover onSave={url => onChange(multiple ? [...urls, url] : [url])} />
       {err ? <p className="mt-2 text-xs text-destructive">{err}</p> : null}
       {urls.length ? (
         <div className="mt-3 flex flex-wrap gap-2">
