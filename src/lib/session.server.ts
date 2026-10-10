@@ -3,6 +3,7 @@ export type Session = { role: "admin" | "seller"; sellerId?: string; exp: number
 /** Cloud validates identity; roles come only from protected database rows. */
 export async function verifyToken(token: string): Promise<Session | null> {
   if (!token) return null;
+  if (token.startsWith("panel.")) { const {verifyPanelSession}=await import("./panel-auth.server"); return verifyPanelSession(token); }
   const url = process.env['SUPABASE_URL'];
   const key = process.env['SUPABASE_PUBLISHABLE_KEY'];
   if (!url || !key) return null;

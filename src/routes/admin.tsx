@@ -1,3 +1,4 @@
+import { changeAdminCredentials } from "@/lib/secure.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { getPanelSession } from "@/lib/secure.functions";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -98,13 +99,9 @@ function AdminPage() {
 
   const login = async () => {
     setErr("");
-    const { data: auth, error } = await supabase.auth.signInWithPassword({ email: user.trim(), password: pass });
-    if (error || !auth.session) { setErr(error?.message ?? "Potwierdź adres e-mail."); return; }
-    const res = await adminLogin({
-      data: { token: auth.session.access_token },
-    }).catch(() => ({ ok: false as const }));
+    const res = await adminLogin({data:{login:user.trim(),password:pass}}).catch(()=>({ok:false as const,error:"Nie udało się połączyć z panelem."}));
     if (!res.ok || !("token" in res)) {
-      setErr("To konto nie ma uprawnień do panelu."); return;
+      setErr("error" in res ? res.error : "Nieprawidłowy login lub hasło."); return;
     }
     setPanelToken(res.token);
     safeStorage.set("pkmr_admin", "1");
@@ -135,10 +132,10 @@ function AdminPage() {
             </span>
             <input
               className={input}
-              placeholder="E-mail"
+              placeholder="Login"
               autoCapitalize="none"
               autoCorrect="off"
-              autoComplete="email"
+              autoComplete="username"
               value={user}
               onChange={(e) => setUser(e.target.value)}
             />
@@ -161,7 +158,7 @@ function AdminPage() {
               {err}
             </p>
           ) : null}
-          <Link to="/auth" className="block text-center text-xs text-primary">Pierwsze logowanie / odzyskaj hasło</Link>
+
           <button className={`${btn} w-full py-3`}>Zaloguj</button>
           <Link
             to="/"
@@ -258,6 +255,12 @@ const settingFields: [string, string][] = [
   ["primary_agent_url", "Główny link rejestracyjny"],
   ["promo_banner_url", "Baner promo (URL)"],
   ["promo_code", "Kod promocyjny"],
+  ["home_title", "Nagłówek strony głównej"],
+  ["home_description", "Opis strony głównej"],
+  ["home_offer_title", "Nagłówek promocji"],
+  ["home_offer_description", "Treść promocji"],
+  ["home_agent_name", "Nazwa głównego agenta"],
+  ["home_button_label", "Tekst przycisku promocji"],
 ];
 
 function BrandingTab() {
@@ -290,14 +293,14 @@ function BrandingTab() {
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <ImageUploader
-          urls={form["agent_logo_url"] ? [form["agent_logo_url"]!] : []}
+          urls={form["agent_logo_url"] ? [form["agent_logo_url"] ?? ""] : []}
           multiple={false}
           folder="branding"
           label="Logo z urządzenia / galerii"
           onChange={(u) => setForm({ ...form, agent_logo_url: u[0] ?? "" })}
         />
         <ImageUploader
-          urls={form["promo_banner_url"] ? [form["promo_banner_url"]!] : []}
+          urls={form["promo_banner_url"] ? [form["promo_banner_url"] ?? ""] : []}
           multiple={false}
           folder="branding"
           label="Baner promo z urządzenia / galerii"
@@ -2145,14 +2148,13 @@ function SecurityTab() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
-  useEffect(() => { void supabase.auth.getUser().then(({data})=>setUsername(data.user?.email??"")); }, []);
+
   const submit = async () => {
     setMsg(""); setErr("");
-    if (!next || next.length < 8 || next !== confirm) { setErr("Nowe hasła muszą być identyczne i mieć minimum 8 znaków."); return; }
-    const { error: loginError } = await supabase.auth.signInWithPassword({ email: username.trim(), password: current });
-    if (loginError) { setErr(loginError.message); return; }
-    const { error } = await supabase.auth.updateUser({ password: next });
-    if (error) { setErr(error.message); return; }
+    if (!next || next.length < 12 || next !== confirm) { setErr("Nowe hasła muszą być identyczne i mieć minimum 12 znaków."); return; }
+    const {error}=await changeAdminCredentials({data:{token:getPanelToken(),current,login:username,password:next}});
+    if(error){setErr(error);return;}
+    clearPanelToken();
     setCurrent(""); setNext(""); setConfirm(""); setMsg("Hasło zostało zmienione.");
   };
 

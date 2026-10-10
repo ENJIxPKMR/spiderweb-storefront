@@ -10,8 +10,10 @@
 <!-- LOVABLE:END -->
 
 - Preserve the target TanStack bootstrap and generated Cloud integration modules when importing source; these bind the app to its runtime.
-- Authenticate panel operations with Cloud-verified bearer tokens and protected user_roles rows, never bundled credentials.
+- Authenticate admin operations with server-signed, expiring sessions and server-only credentials; seller operations use Cloud identity and protected roles. Never bundle credentials.
 - Keep immutable product/QC image bytes in private storage and expose only intentionally public archive/catalog prefixes through the cached photo endpoint.
 - Use streaming image editing with an authenticated server route; persist terminal access blocks and never automatically retry denied requests.
 
 - Strip caller-provided product IDs from seller inserts and disallow seller upserts to prevent overwriting another store.
+
+- Homepage promotional photos, copy and destinations read admin-managed settings; defaults apply only when a field is empty.
