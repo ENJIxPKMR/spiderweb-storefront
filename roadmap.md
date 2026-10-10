@@ -1,4 +1,5 @@
 # RENJP
+- [ ] Correct scope: connect homepage content/photos to admin settings and diagnose missing admin access.
 - [x] Import public application pages and tools; verify route rendering.
 - [x] Rebuild homepage with PKMR offer and smooth cursor spiderweb.
 - [x] Keep outfit link in menu only; show calculator and tracking/QC/converter below products.
