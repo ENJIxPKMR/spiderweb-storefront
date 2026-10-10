@@ -18,11 +18,15 @@ export const qcForProduct = createServerFn({ method: "POST" })
 
     const { data: row } = await supabaseAdmin
       .from("products")
-      .select("id, title, qc_images, store_url, qc_url, agent_links")
+      .select("id, title, seller_id, qc_images, store_url, qc_url, agent_links")
       .eq("id", data.productId)
       .maybeSingle();
 
     if (!row) return { ok: false as const, title: "", images: [] as string[] };
+    if (row.seller_id) {
+      const { data: seller } = await supabaseAdmin.from("sellers").select("active").eq("id", row.seller_id).maybeSingle();
+      if (!seller?.active) return { ok: false as const, title: "", images: [] as string[], totalPhotos: 0, hasMore: false, source: "" };
+    }
 
     const stored = ((row as any).qc_images ?? []).filter((u: string) =>
       /^(https?:\/\/|\/api\/public\/product-image\?)/i.test(u),

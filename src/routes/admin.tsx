@@ -1867,7 +1867,7 @@ function SellersTab() {
   const save = async () => {
     if (!form.name.trim()) return setMsg("Podaj nazwę sklepu.");
     if (!form.username.trim()) return setMsg("Podaj login sprzedawcy.");
-    if (!form.id && !form.password.trim()) return setMsg("Podaj hasło dla nowego sprzedawcy.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.username.trim())) return setMsg("Podaj adres e-mail sprzedawcy.");
     setMsg("");
     const slug =
       (form.slug || form.name).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -1881,9 +1881,7 @@ function SellersTab() {
       external_url: form.external_url,
       active: form.active,
     };
-    const withPass = form.password
-      ? { ...base, password_hash: await sha256Hex(form.password) }
-      : base;
+    const withPass = base;
     // Upsert po id: konta wbudowane w kod nie mają jeszcze wiersza w bazie,
     // więc zwykły update nic by nie zmienił i zapis wyglądałby na udany.
     const { error } = form.id
@@ -1915,18 +1913,12 @@ function SellersTab() {
           />
           <input
             className={input}
-            placeholder="Login sprzedawcy"
+            placeholder="E-mail sprzedawcy"
             autoCapitalize="none"
             value={form.username}
             onChange={(e) => setForm({ ...form, username: e.target.value })}
           />
-          <input
-            className={input}
-            type="password"
-            placeholder={form.id ? "Nowe hasło (opcjonalnie)" : "Hasło"}
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
+
           <input
             className={input}
             placeholder="Zewnętrzny link sklepu (Yupoo itp.)"
