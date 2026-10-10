@@ -3,7 +3,7 @@
 - [x] Restore admin login/password without email; verify login, settings save and uploaded homepage banner.
 - [x] Import public application pages and tools; verify route rendering.
 - [x] Rebuild homepage with PKMR offer and smooth cursor spiderweb.
-- [x] Keep outfit link in menu only; show calculator and tracking/QC/converter below products.
+- [x] Keep outfit link in menu only; tool tiles under the hero; categories above products; weight calculator only on the tools page.
 - [x] Sort products without photos last in the shared catalogue used by browsing surfaces.
 - [x] Create Cloud schema, secure panel authentication, private photo storage and archive endpoint.
 - [x] Implement streaming AI background removal; gateway returns completed image.
