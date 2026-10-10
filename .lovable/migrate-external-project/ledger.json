@@ -1,13 +1,61 @@
 {
   "source": "https://github.com/ENJ0070/RENJP",
   "capabilities": [
-    {"capability":"Application code and public routes","source":"repository","outcome":"migrate","status":"in_progress","next_action":"Import source preserving target bootstrap and redesign homepage"},
-    {"capability":"Database schema","source":"SQL migrations","outcome":"migrate","status":"in_progress","next_action":"Recreate schema with safe grants and policies"},
-    {"capability":"Existing records","source":"original backend","outcome":"migrate","status":"pending","next_action":"Owner supplies table CSV/JSON exports"},
-    {"capability":"Users and ownership","source":"hardcoded accounts and original backend","outcome":"migrate","status":"pending","next_action":"Owner supplies user emails and original IDs; replace hardcoded credentials with Cloud Auth"},
-    {"capability":"Photos and QC bytes","source":"original storage and external providers","outcome":"migrate","status":"in_progress","next_action":"Create durable storage; existing photo records/bytes require export"},
-    {"capability":"QC, tracking and product integrations","source":"FinderQC and agent APIs","outcome":"preserve","status":"in_progress","next_action":"Import and verify public paths"},
-    {"capability":"AI background removal","source":"new request","outcome":"implement","status":"in_progress","next_action":"Implement image edit action with safe server boundary"},
-    {"capability":"Cutover and hosted verification","source":"unpublished project","outcome":"pending","status":"pending","next_action":"Publish only on owner request after missing data is resolved"}
+    {
+      "capability": "Application code and public routes",
+      "source": "repository",
+      "outcome": "migrate",
+      "status": "verified",
+      "next_action": "Public pages render without browser errors; mobile width and filters checked"
+    },
+    {
+      "capability": "Database schema",
+      "source": "SQL migrations",
+      "outcome": "migrate",
+      "status": "verified",
+      "next_action": "Schema applied; public catalogue query checked; no original products supplied"
+    },
+    {
+      "capability": "Existing records",
+      "source": "original backend",
+      "outcome": "migrate",
+      "status": "pending",
+      "next_action": "Owner supplies table CSV/JSON exports"
+    },
+    {
+      "capability": "Users and ownership",
+      "source": "hardcoded accounts and original backend",
+      "outcome": "migrate",
+      "status": "pending",
+      "next_action": "Cloud login, recovery and seller invitations implemented; owner must supply original emails/IDs, first admin assignment and verified first-login test"
+    },
+    {
+      "capability": "Photos and QC bytes",
+      "source": "original storage and external providers",
+      "outcome": "migrate",
+      "status": "pending",
+      "next_action": "Private storage, archive writes and public cache endpoint implemented; old files and representative image import still require owner export"
+    },
+    {
+      "capability": "QC, tracking and product integrations",
+      "source": "FinderQC and agent APIs",
+      "outcome": "preserve",
+      "status": "pending",
+      "next_action": "Pages retained; live QC and tracking need an actual product link and tracking number; browser-local agent integrations not verified"
+    },
+    {
+      "capability": "AI background removal",
+      "source": "new request",
+      "outcome": "implement",
+      "status": "partially_verified",
+      "next_action": "Gateway returned partial and completed image; route rejects unsigned requests; signed-in save awaits panel account"
+    },
+    {
+      "capability": "Cutover and hosted verification",
+      "source": "unpublished project",
+      "outcome": "pending",
+      "status": "pending",
+      "next_action": "Publish only on owner request after missing data is resolved"
+    }
   ]
 }
