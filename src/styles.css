@@ -245,7 +245,8 @@
 .catalog-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
 .catalog-heading h2 { font-size:26px; font-weight:700; margin-top:5px; }
 .catalog-filters { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:15px 0; margin-bottom:20px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
-.catalog-filters input { width:82px; padding:8px 10px; border:1px solid var(--border); background:var(--surface); border-radius:5px; font-size:12px; }
+.catalog-filters input { width:82px; padding:8px 10px; border:1px solid var(--border); background:var(--surface); border-radius:5px; font-size:12px; appearance:textfield; -moz-appearance:textfield; }
+.catalog-filters input::-webkit-outer-spin-button, .catalog-filters input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 .product-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
 .home-layout .cv-card { border-radius:8px; }
 .empty-catalog { padding:48px 20px; text-align:center; border-block:1px solid var(--border); color:var(--muted-foreground); }
