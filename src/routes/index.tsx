@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
-import { ArrowRight, Search, SlidersHorizontal, Package, ScanSearch, Link2, Shirt, Footprints, ShoppingBag, ChevronRight, X } from 'lucide-react';
+import { ArrowRight, Search, Package, ScanSearch, Link2, Shirt, Footprints, ShoppingBag, ChevronRight } from 'lucide-react';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductModal } from '@/components/ProductModal';
 import { useProducts, useAgents, useCategories, useSettings, type Product } from '@/lib/store';
