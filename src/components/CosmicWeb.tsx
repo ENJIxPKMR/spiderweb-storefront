@@ -11,6 +11,9 @@ export function CosmicWeb() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const fine = window.matchMedia("(pointer: fine)");
     let frame = 0;
+    const palette = getComputedStyle(canvas);
+    const lineColor = palette.getPropertyValue("--web-line").trim();
+    const focusColor = palette.getPropertyValue("--web-focus").trim();
     let w = 0;
     let h = 0;
     let dpr = 1;
@@ -48,7 +51,7 @@ export function CosmicWeb() {
           const dist = Math.hypot(p.x - q.x, p.y - q.y);
           if (dist > 145) continue;
           const proximity = Math.max(0, 1 - Math.min(Math.hypot((p.x + q.x) / 2 - focus.x, (p.y + q.y) / 2 - focus.y) / 300, 1));
-          ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue("--web-line").trim();
+          ctx.strokeStyle = lineColor;
           ctx.globalAlpha = 0.09 + proximity * 0.3;
           ctx.lineWidth = proximity > 0.2 ? 1.2 : 0.8;
           ctx.beginPath();
@@ -61,7 +64,7 @@ export function CosmicWeb() {
         const nearby = points.filter((p) => Math.hypot(p.x - focus.x, p.y - focus.y) < 190).sort((a, b) => Math.atan2(a.y - focus.y, a.x - focus.x) - Math.atan2(b.y - focus.y, b.x - focus.x));
         nearby.forEach((p, i) => {
           const next = nearby[(i + 1) % nearby.length];
-          ctx.strokeStyle = getComputedStyle(canvas).getPropertyValue("--web-focus").trim();
+          ctx.strokeStyle = focusColor;
           ctx.globalAlpha = 0.45;
           ctx.lineWidth = 1.15;
           ctx.beginPath();
@@ -73,12 +76,14 @@ export function CosmicWeb() {
       }
     };
     const tick = () => {
+      if (document.hidden) { frame = 0; return; }
       focus.x += (cursor.x - focus.x) * 0.13;
       focus.y += (cursor.y - focus.y) * 0.13;
       paint();
-      frame = requestAnimationFrame(tick);
+      if (Math.abs(cursor.x-focus.x)+Math.abs(cursor.y-focus.y)>0.4) frame = requestAnimationFrame(tick);
+      else frame = 0;
     };
-    const move = (e: PointerEvent) => { cursor = { x: e.clientX, y: e.clientY }; };
+    const move = (e: PointerEvent) => { cursor = { x: e.clientX, y: e.clientY }; if (!frame && !reduced.matches && fine.matches) frame = requestAnimationFrame(tick); };
     const leave = () => { cursor = { x: -1000, y: -1000 }; };
     const motion = () => {
       cancelAnimationFrame(frame);

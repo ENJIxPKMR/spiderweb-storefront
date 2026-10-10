@@ -100,6 +100,7 @@ function SellerPage() {
             onChange={(e) => setPass(e.target.value)}
           />
           {err ? <p className="text-xs text-destructive">{err}</p> : null}
+          <Link to="/auth" className="block text-xs text-primary">Pierwsze logowanie / odzyskaj hasło</Link>
           <button className={`${btn} w-full`}>Zaloguj</button>
         </form>
       </div>

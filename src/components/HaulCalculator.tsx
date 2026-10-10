@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import {
   money,
@@ -66,26 +67,26 @@ export function HaulCalculator() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
             aria-label={t("calc.less")}
             onClick={() => setKg((v) => clamp(v - 0.5))}
             className="h-10 w-10 rounded-xl border border-border text-lg font-bold text-muted-foreground transition-all hover:border-primary hover:text-primary"
           >
             −
-          </button>
+          </Button>
           <div className="rounded-2xl border border-primary/40 bg-secondary/60 px-5 py-2 text-center glow-ring">
             <p className="font-display text-3xl font-black text-gradient-brand">{kg.toFixed(1)}</p>
             <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
               {t("calc.kilograms")}
             </p>
           </div>
-          <button
+          <Button
             aria-label={t("calc.more")}
             onClick={() => setKg((v) => clamp(v + 0.5))}
             className="h-10 w-10 rounded-xl border border-border text-lg font-bold text-muted-foreground transition-all hover:border-primary hover:text-primary"
           >
             +
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -108,7 +109,7 @@ export function HaulCalculator() {
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {[0.5, 1, 1.5, 2, 3, 5, 7.5, 10, 15, 20, 25].map((v) => (
-            <button
+            <Button
               key={v}
               onClick={() => setKg(v)}
               className={`rounded-lg border px-2.5 py-1 text-[11px] font-bold transition-all ${
@@ -118,7 +119,7 @@ export function HaulCalculator() {
               }`}
             >
               {v} kg
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -132,7 +133,7 @@ export function HaulCalculator() {
           { on: true, label: t("calc.withCoupons") },
           { on: false, label: t("calc.withoutCoupons") },
         ].map((opt) => (
-          <button
+          <Button
             key={String(opt.on)}
             onClick={() => setWithCoupons(opt.on)}
             className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-all ${
@@ -142,7 +143,7 @@ export function HaulCalculator() {
             }`}
           >
             {opt.label}
-          </button>
+          </Button>
         ))}
       </div>
 

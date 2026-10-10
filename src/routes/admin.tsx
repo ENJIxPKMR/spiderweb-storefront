@@ -2211,6 +2211,7 @@ function SecurityTab() {
           />
         </label>
         {err ? <p className="text-xs text-destructive">{err}</p> : null}
+          <Link to="/auth" className="block text-xs text-primary">Pierwsze logowanie / odzyskaj hasło</Link>
         {msg ? <p className="text-xs text-brand-cyan">{msg}</p> : null}
         <button className={btn} onClick={() => void submit()}>
           Zapisz dane logowania
