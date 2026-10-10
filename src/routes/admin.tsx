@@ -161,6 +161,7 @@ function AdminPage() {
               {err}
             </p>
           ) : null}
+          <Link to="/auth" className="block text-center text-xs text-primary">Pierwsze logowanie / odzyskaj hasło</Link>
           <button className={`${btn} w-full py-3`}>Zaloguj</button>
           <Link
             to="/"
