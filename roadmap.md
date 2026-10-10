@@ -1,0 +1,12 @@
+# RENJP
+- [x] Import public application pages and tools; verify route rendering.
+- [x] Rebuild homepage with PKMR offer and smooth cursor spiderweb.
+- [x] Keep outfit link in menu only; show calculator and tracking/QC/converter below products.
+- [x] Sort products without photos last in the shared catalogue used by browsing surfaces.
+- [x] Create Cloud schema, secure panel authentication, private photo storage and archive endpoint.
+- [x] Implement streaming AI background removal; gateway returns completed image.
+- [x] Verify filters, calculator, mobile width and unsigned-access rejection.
+- [ ] Import existing records, user IDs/emails and photo bytes (waiting for owner exports).
+- [ ] Verify admin/seller CRUD, invitations and signed-in image saving (waiting for an authorised account).
+- [ ] Verify live QC/tracking and external agent integrations (waiting for real test links/numbers and any source integration setup).
+- [ ] Verify hosted cutover (app unpublished; publishing not requested).
