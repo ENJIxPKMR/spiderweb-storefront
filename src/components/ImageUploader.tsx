@@ -49,10 +49,11 @@ export function ImageUploader({
         }}
       />
       <Button
+        variant="chip"
         type="button"
         disabled={busy}
         onClick={() => ref.current?.click()}
-        className="rounded-lg border border-primary/60 px-3 py-2 text-xs font-bold uppercase tracking-wide text-primary disabled:opacity-50"
+        className="h-auto max-w-full whitespace-normal px-3 py-2 text-xs font-bold uppercase"
       >
         {busy ? "Przesyłanie..." : label}
       </Button>

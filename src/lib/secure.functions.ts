@@ -25,12 +25,11 @@ export const getPanelSession = createServerFn({ method: "POST" })
   });
 
 export const adminLogin = createServerFn({ method: "POST" })
-  .inputValidator((data: { token: string }) => ({ token: cleanToken(data?.token) }))
-  .handler(async ({ data }) => {
-    const { verifyToken } = await import("@/lib/session.server");
-    const session = await verifyToken(data.token);
-    return session?.role === "admin" ? { ok: true as const, token: data.token } : { ok: false as const };
-  });
+  .inputValidator((data: { login: string; password: string }) => ({login:String(data?.login??'').trim().slice(0,120),password:String(data?.password??'').slice(0,500)}))
+  .handler(async ({data}) => { const {loginPanel}=await import('./panel-auth.server');return loginPanel(data.login,data.password); });
+export const changeAdminCredentials = createServerFn({method:'POST'})
+ .inputValidator((data:{token:string;current:string;login:string;password:string})=>data)
+ .handler(async({data})=>{const {changePanelCredentials}=await import('./panel-auth.server');return changePanelCredentials(data.token,data.current,data.login,data.password)});
 export const sellerLogin = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: cleanToken(data?.token) }))
   .handler(async ({ data }) => {

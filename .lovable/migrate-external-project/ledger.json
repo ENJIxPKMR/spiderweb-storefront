@@ -27,14 +27,14 @@
       "source": "hardcoded accounts and original backend",
       "outcome": "migrate",
       "status": "pending",
-      "next_action": "Cloud login, recovery and seller invitations implemented; owner must supply original emails/IDs, first admin assignment and verified first-login test"
+      "next_action": "Admin login/password without email verified using server-only credentials; original seller identity import remains pending"
     },
     {
       "capability": "Photos and QC bytes",
       "source": "original storage and external providers",
       "outcome": "migrate",
       "status": "pending",
-      "next_action": "Private storage, archive writes and public cache endpoint implemented; old files and representative image import still require owner export"
+      "next_action": "Admin photo upload and homepage banner display verified; old catalogue records/files still require export"
     },
     {
       "capability": "QC, tracking and product integrations",

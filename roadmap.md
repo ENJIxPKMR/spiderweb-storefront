@@ -1,5 +1,5 @@
 # RENJP
-- [ ] Correct scope: connect homepage content/photos to admin settings and diagnose missing admin access.
+- [x] Restore admin login/password without email; verify login, settings save and uploaded homepage banner.
 - [x] Import public application pages and tools; verify route rendering.
 - [x] Rebuild homepage with PKMR offer and smooth cursor spiderweb.
 - [x] Keep outfit link in menu only; show calculator and tracking/QC/converter below products.
@@ -8,6 +8,7 @@
 - [x] Implement streaming AI background removal; gateway returns completed image.
 - [x] Verify filters, calculator, mobile width and unsigned-access rejection.
 - [ ] Import existing records, user IDs/emails and photo bytes (waiting for owner exports).
-- [ ] Verify admin/seller CRUD, invitations and signed-in image saving (waiting for an authorised account).
+- [x] Verify admin settings writes and signed-in image upload/display.
+- [ ] Verify seller invitations and original account ownership (waiting for source user data).
 - [ ] Verify live QC/tracking and external agent integrations (waiting for real test links/numbers and any source integration setup).
 - [ ] Verify hosted cutover (app unpublished; publishing not requested).

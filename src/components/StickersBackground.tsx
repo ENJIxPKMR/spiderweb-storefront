@@ -35,7 +35,7 @@ function rand(seed: number) {
  * Tło z rozproszonych naklejek zbudowanych z grafik wgranych w panelu admina.
  * Brak powtórzeń sąsiadujących: lista jest unikalna i przetasowana deterministycznie.
  */
-export function StickersBackground() {
+export function StickersBackground({customOnly=false}:{customOnly?:boolean}) {
   const { data: agents } = useAgents();
   const { data: settings } = useSettings();
   const [broken, setBroken] = useState<string[]>([]);
@@ -44,8 +44,8 @@ export function StickersBackground() {
     const custom = (settings?.["bg_stickers"] ?? "").split("\n");
     const raw = [
       ...custom,
-      ...AGENT_STICKERS,
-      ...(agents ?? []).map((a) => a.avatar_url),
+      ...(customOnly?[]:AGENT_STICKERS),
+      ...(customOnly?[]:agents ?? []).map((a) => a.avatar_url),
     ].filter((u): u is string => Boolean(u && u.trim()));
 
     const unique = Array.from(new Set(raw)).filter((u) => !broken.includes(u));
@@ -55,7 +55,7 @@ export function StickersBackground() {
       .sort((a, b) => a.k - b.k)
       .map((s) => s.url)
       .slice(0, 24);
-  }, [agents, settings, broken]);
+  }, [agents, settings, broken, customOnly]);
 
   if (!stickers.length) return null;
 
@@ -64,7 +64,7 @@ export function StickersBackground() {
   const rowStep = 100 / rows;
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       {stickers.map((url, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);
