@@ -7,6 +7,9 @@ import { agentRank, sortAgentsByRank } from "@/lib/agentRank";
 export const Route = createFileRoute("/agenci")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+
       { title: "Zaufani agenci i kupony — PKMREPS" },
       {
         name: "description",

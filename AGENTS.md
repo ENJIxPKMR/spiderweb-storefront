@@ -8,3 +8,8 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Preserve the target TanStack bootstrap and generated Cloud integration modules when importing source; these bind the app to its runtime.
+- Authenticate panel operations with Cloud-verified bearer tokens and protected user_roles rows, never bundled credentials.
+- Keep immutable product/QC image bytes in private storage and expose only intentionally public archive/catalog prefixes through the cached photo endpoint.
+- Use streaming image editing with an authenticated server route; persist terminal access blocks and never automatically retry denied requests.

@@ -50,6 +50,9 @@ import {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+
       { title: "Panel administratora — PKMREPS" },
       { name: "description", content: "Wewnętrzny panel zarządzania treścią serwisu." },
       { name: "robots", content: "noindex" },
@@ -2149,37 +2152,15 @@ function SecurityTab() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
-  useEffect(() => {
-    if (settings) setUsername(settings["admin_username"] || DEFAULT_ADMIN_USER);
-  }, [settings]);
-
+  useEffect(() => { void supabase.auth.getUser().then(({data})=>setUsername(data.user?.email??"")); }, []);
   const submit = async () => {
-    setMsg("");
-    setErr("");
-    const expectedHash = settings?.["admin_password_hash"] || DEFAULT_ADMIN_HASH;
-    if ((await sha256Hex(current)) !== expectedHash) {
-      setErr("Aktualne hasło jest nieprawidłowe.");
-      return;
-    }
-    if (!username.trim()) {
-      setErr("Login nie może być pusty.");
-      return;
-    }
-    if (next && next.length < 8) {
-      setErr("Nowe hasło musi mieć co najmniej 8 znaków.");
-      return;
-    }
-    if (next !== confirm) {
-      setErr("Nowe hasła nie są identyczne.");
-      return;
-    }
-    await saveSetting("admin_username", username.trim());
-    if (next) await saveSetting("admin_password_hash", await sha256Hex(next));
-    setCurrent("");
-    setNext("");
-    setConfirm("");
-    await refresh("settings");
-    setMsg("Dane logowania zostały zaktualizowane.");
+    setMsg(""); setErr("");
+    if (!next || next.length < 8 || next !== confirm) { setErr("Nowe hasła muszą być identyczne i mieć minimum 8 znaków."); return; }
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email: username.trim(), password: current });
+    if (loginError) { setErr(loginError.message); return; }
+    const { error } = await supabase.auth.updateUser({ password: next });
+    if (error) { setErr(error.message); return; }
+    setCurrent(""); setNext(""); setConfirm(""); setMsg("Hasło zostało zmienione.");
   };
 
   return (

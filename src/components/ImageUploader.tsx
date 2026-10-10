@@ -1,3 +1,5 @@
+import { BackgroundRemover } from "@/components/BackgroundRemover";
+import { Button } from "@/components/ui/button";
 import { useRef, useState } from "react";
 import { uploadImages } from "@/lib/store";
 
@@ -46,14 +48,15 @@ export function ImageUploader({
           }
         }}
       />
-      <button
+      <Button
         type="button"
         disabled={busy}
         onClick={() => ref.current?.click()}
         className="rounded-lg border border-primary/60 px-3 py-2 text-xs font-bold uppercase tracking-wide text-primary disabled:opacity-50"
       >
         {busy ? "Przesyłanie..." : label}
-      </button>
+      </Button>
+      <BackgroundRemover onSave={url => onChange(multiple ? [...urls, url] : [url])} />
       {err ? <p className="mt-2 text-xs text-destructive">{err}</p> : null}
       {urls.length ? (
         <div className="mt-3 flex flex-wrap gap-2">

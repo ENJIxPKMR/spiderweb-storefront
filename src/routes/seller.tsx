@@ -24,6 +24,9 @@ import {
 export const Route = createFileRoute("/seller")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+
       { title: "Panel sprzedawcy — PKMREPS" },
       { name: "description", content: "Panel zarządzania sklepem dla sprzedawców PKMREPS." },
       { name: "robots", content: "noindex" },

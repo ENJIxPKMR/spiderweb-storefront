@@ -7,6 +7,9 @@ import { useAgents, useProducts, type Product } from "@/lib/store";
 export const Route = createFileRoute("/outfity")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+
       { title: "Losowanie outfitów — PKMREPS" },
       {
         name: "description",

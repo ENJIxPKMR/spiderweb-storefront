@@ -4,6 +4,9 @@ import { usePromos } from "@/lib/store";
 export const Route = createFileRoute("/promocje")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+
       { title: "Promocje sklepów i produktów — PKMREPS" },
       {
         name: "description",

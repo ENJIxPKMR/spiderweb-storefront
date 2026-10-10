@@ -31,7 +31,8 @@ export async function streamImage(
   };
   const res = await send(true);
   if (!res.ok || !res.body) {
-    throw new Error(`Image generation failed: ${res.status} ${await res.text().catch(() => "")}`);
+    const payload = await res.json().catch(() => null);
+    throw new Error(payload?.error?.message ?? payload?.message ?? `Usuwanie tła nie powiodło się (${res.status}).`);
   }
 
   let sawCompleted = false;

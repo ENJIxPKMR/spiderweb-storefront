@@ -8,6 +8,9 @@ import { useLang } from "@/lib/i18n";
 export const Route = createFileRoute("/sklep/$slug")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+
       { title: "Sklep sprzedawcy — PKMREPS" },
       { name: "description", content: "Produkty wybranego sprzedawcy na platformie PKMREPS." },
       { property: "og:title", content: "Sklep sprzedawcy — PKMREPS" },
