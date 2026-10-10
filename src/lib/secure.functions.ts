@@ -116,13 +116,13 @@ export const secureMutate = createServerFn({ method: "POST" })
       const input = (data.values ?? {}) as Record<string, unknown>;
       const { password_hash: _password, user_id: _owner, ...safe } = input;
       if (data.op === "insert" || data.op === "upsert") {
-        const email = String(safe.username ?? "").trim();
+        const email = String(safe['username'] ?? "").trim();
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Podaj adres e-mail sprzedawcy." };
-        const existing = safe.id ? await supabaseAdmin.from("sellers").select("id,user_id").eq("id", String(safe.id)).maybeSingle() : null;
+        const existing = safe['id'] ? await supabaseAdmin.from("sellers").select("id,user_id").eq("id", String(safe['id'])).maybeSingle() : null;
         if (!existing?.data) {
           const { data: invited, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
           if (inviteError || !invited.user) return { error: "Nie udało się wysłać zaproszenia. Sprawdź adres e-mail i wysyłanie wiadomości w Cloud." };
-          const { data: seller, error: sellerError } = await supabaseAdmin.from("sellers").insert({ ...safe, name: String(safe.name ?? ""), slug: String(safe.slug ?? ""), user_id: invited.user.id }).select("id").single();
+          const { data: seller, error: sellerError } = await supabaseAdmin.from("sellers").insert({ ...safe, name: String(safe['name'] ?? ""), slug: String(safe['slug'] ?? ""), user_id: invited.user.id }).select("id").single();
           if (sellerError || !seller) return { error: "Nie udało się zapisać sklepu." };
           const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: invited.user.id, seller_id: seller.id, role: "seller" });
           return { error: roleError ? "Nie udało się nadać dostępu do sklepu." : null };
